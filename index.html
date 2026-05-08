@@ -561,7 +561,7 @@ async function loadRefStats(){
   }
 
   try{
-    const r=await fetch(API_BASE+'/referral/my-stats',{
+    const r=await fetch(API_BASE+'/referral/my-stats-by-code',{
       headers:{Authorization:'Bearer '+apiToken,'Content-Type':'application/json'}
     });
     if(!r.ok){
@@ -572,7 +572,7 @@ async function loadRefStats(){
         const d2=await res2.json();
         if(d2.valid&&d2.referral_code){
           apiToken=d2.referral_code;cfg.token=d2.referral_code;setCfg(cfg);
-          const r2=await fetch(API_BASE+'/referral/my-stats',{headers:{Authorization:'Bearer '+apiToken,'Content-Type':'application/json'}});
+          const r2=await fetch(API_BASE+'/referral/my-stats-by-code',{headers:{Authorization:'Bearer '+apiToken,'Content-Type':'application/json'}});
           if(!r2.ok){const e2=await r2.json().catch(()=>({}));throw new Error(e2.detail||'Status '+r2.status)}
           const d3=await r2.json();
           setVal('ref-total',d3.total??'—');setVal('ref-trial',d3.trialing??'—');setVal('ref-paid',d3.paid??'—');setVal('ref-cancelled',d3.cancelled??'—');
