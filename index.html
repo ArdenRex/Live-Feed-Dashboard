@@ -6,7 +6,6 @@
 <title>Freelancer Dashboard — Aceden Group</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg:#0d0f12;--surface:#151820;--surface2:#1c2130;--border:#252d3d;--border2:#2e3a4e;
@@ -58,48 +57,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .m-text{font-size:0.85rem;color:#a0e8cc}
 .m-rate{font-family:var(--mono);font-size:0.78rem;color:var(--green)}
 
-/* ── STATS ── */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem}
-.stat-label{font-family:var(--mono);font-size:0.65rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
-.stat-val{font-size:clamp(1.1rem,2.5vw,1.6rem);font-weight:600;letter-spacing:-.03em;line-height:1;margin-bottom:3px}
-.stat-note{font-size:0.7rem;color:var(--muted)}
-.c-green{color:var(--green)}
 
-/* ── CARDS ── */
-.two-col{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;margin-bottom:1.25rem}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem}
-.card-title{font-family:var(--mono);font-size:0.65rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
-.track{height:5px;background:var(--surface2);border-radius:20px;overflow:hidden;margin-top:4px}
-.fill{height:100%;border-radius:20px;background:var(--accent);transition:width .35s ease}
-.fill.warn{background:var(--amber)}.fill.danger{background:var(--red)}
-.cap-row{margin-bottom:10px}
-.cap-meta{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
-.cap-meta span:last-child{color:var(--text)}
-.cat-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
-.cat-name{font-size:0.74rem;color:var(--muted);width:88px;flex-shrink:0}
-.cat-track{flex:1;height:5px;background:var(--surface2);border-radius:20px;overflow:hidden}
-.cat-fill{height:100%;border-radius:20px;transition:width .35s}
-.cat-hrs{font-family:var(--mono);font-size:0.7rem;color:var(--text);width:36px;text-align:right}
 
-/* ── TABLE ── */
-.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
-.toolbar select,.toolbar input[type="date"]{background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:0.72rem;padding:5px 10px;outline:none;cursor:pointer}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th{font-family:var(--mono);font-size:0.62rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-bottom:1px solid var(--border);text-align:left;font-weight:400}
-td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:0.82rem;color:var(--text);vertical-align:top}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--surface2)}
-.mono{font-family:var(--mono)}.muted-t{color:var(--muted);font-size:0.76rem}
-.empty-td{text-align:center;color:var(--muted);padding:2.5rem!important;font-size:0.82rem}
-.badge{display:inline-block;font-family:var(--mono);font-size:0.62rem;padding:2px 8px;border-radius:20px;letter-spacing:.03em}
-.b-community{background:#0f2a4a;color:#7eb8f5}.b-outreach{background:var(--green-dim);color:var(--green)}
-.b-content{background:var(--amber-dim);color:var(--amber)}.b-admin{background:#1e2230;color:var(--muted)}
-.b-research{background:var(--purple-dim);color:var(--purple)}
-.del-btn{background:none;border:none;cursor:pointer;color:var(--border2);font-size:0.82rem;padding:2px 5px;border-radius:4px;transition:color .15s,background .15s}
-.del-btn:hover{color:var(--red);background:var(--red-dim)}
-.tbl-footer{font-family:var(--mono);font-size:0.7rem;color:var(--muted);margin-top:10px;padding-top:8px;border-top:1px solid var(--border);text-align:right;display:none}
 
 /* ── REFERRAL ── */
 .ref-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.5rem 1.75rem;margin-bottom:1.5rem}
@@ -188,8 +147,7 @@ tr:hover td{background:var(--surface2)}
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="role-badge"><div class="dot"></div><span>Freelancer</span></div>
-      <button class="btn" onclick="exportCSV()">Export CSV</button>
-      <button class="btn" onclick="doLogout()">Sign out</button>
+<button class="btn" onclick="doLogout()">Sign out</button>
     </div>
   </header>
 
@@ -221,75 +179,13 @@ tr:hover td{background:var(--surface2)}
   </div>
 
 
-  <!-- STATS -->
-  <div class="stats">
-    <div class="stat"><div class="stat-label">Hours this week</div><div class="stat-val" id="s-week">—</div><div class="stat-note">Cap: 15 hrs/week</div></div>
-    <div class="stat"><div class="stat-label">Total hours</div><div class="stat-val" id="s-total">—</div><div class="stat-note">Max 120 hrs</div></div>
-    <div class="stat"><div class="stat-label">Days logged</div><div class="stat-val" id="s-days">—</div><div class="stat-note">Unique work days</div></div>
-  </div>
-
-  <div class="two-col">
-    <div class="card">
-      <div class="card-title">Hours by category</div>
-      <div id="cat-bars"><div style="color:var(--muted);font-size:.8rem">No entries yet</div></div>
-      <div style="margin-top:1.25rem">
-        <div class="card-title">Utilisation</div>
-        <div class="cap-row"><div class="cap-meta"><span>This week</span><span id="cap-lbl">—</span></div><div class="track"><div class="fill" id="cap-bar" style="width:0%"></div></div></div>
-        <div class="cap-row"><div class="cap-meta"><span>Project total</span><span id="proj-lbl">—</span></div><div class="track"><div class="fill" id="proj-bar" style="width:0%"></div></div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Weekly cap</div>
-      <div class="cap-row" style="margin-bottom:1.25rem">
-        <div class="cap-meta"><span>This week</span><span id="cap-lbl2">—</span></div>
-        <div class="track"><div class="fill" id="cap-bar2" style="width:0%"></div></div>
-        <div style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);margin-top:6px">Remaining: <span id="cap-remain" style="color:var(--text)">—</span> hrs</div>
-      </div>
-      <div class="card-title">Milestone 1</div>
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.8rem;color:var(--muted)">
-        <input type="checkbox" id="m1-toggle" onchange="toggleM1()" style="accent-color:var(--green);width:15px;height:15px">
-        Mark as reached (50 paid users) — upgrades rate to $15/hr
-      </label>
-    </div>
-  </div>
-
-  <!-- ACTIVITY LOG -->
-  <div class="card">
-    <div class="toolbar">
-      <div class="card-title" style="margin:0;flex:1">Activity log</div>
-      <input type="date" id="f-date" onchange="renderTable()">
-      <select id="f-cat" onchange="renderTable()">
-        <option value="">All categories</option>
-        <option value="community">Community</option>
-        <option value="outreach">Outreach</option>
-        <option value="content">Content</option>
-        <option value="research">Research</option>
-        <option value="admin">Admin</option>
-      </select>
-      <button class="btn" onclick="loadEntries()">↻ Refresh</button>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Hours</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="log-body"><tr><td colspan="6" class="empty-td">Loading...</td></tr></tbody>
-      </table>
-    </div>
-    <div class="tbl-footer" id="tbl-ft">Showing <span id="row-ct">0</span> entries — <span id="ft-hrs">0.0</span> hrs</div>
-  </div>
-
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-const SUPABASE_URL   = 'https://numvehlkhbrttejrauus.supabase.co';
-const SUPABASE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51bXZlaGxraGJydHRlanJhdXVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5NzE0NzIsImV4cCI6MjA5MzU0NzQ3Mn0.4Q9q2zrjTIFJdRr1hVSpjDlzdm75-o1VI_QG5Zi-YDM';
-const API_BASE       = 'https://ai-workflow-coordinator-api-production.up.railway.app';
+const API_BASE = 'https://ai-workflow-coordinator-api-production.up.railway.app';
 
-const CAT_LBL={community:'Community',outreach:'Outreach',content:'Content',admin:'Admin',research:'Research'};
-const CAT_COL={community:'#3d7fff',outreach:'#22c98b',content:'#f5a623',admin:'#4a5568',research:'#a78bfa'};
-const CAT_BDG={community:'b-community',outreach:'b-outreach',content:'b-content',admin:'b-admin',research:'b-research'};
-
-let sb=null,entries=[],m1=false,m1Date=null,freelancerSlug=null,apiToken=null;
+let freelancerSlug=null,apiToken=null;
 
 // ── STORAGE ──────────────────────────────────────────────────────────────────
 function getCfg(){try{return JSON.parse(localStorage.getItem('fl_cfg_v1')||'null')}catch(e){return null}}
@@ -297,7 +193,6 @@ function setCfg(c){localStorage.setItem('fl_cfg_v1',JSON.stringify(c))}
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function today(){return new Date().toISOString().split('T')[0]}
-function weekStart(){const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().split('T')[0]}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function showToast(msg,isErr){
   const t=document.getElementById('toast');
@@ -392,13 +287,10 @@ function resetSetup(){
 // ── APP LAUNCH ───────────────────────────────────────────────────────────────
 async function launchApp(){
   const cfg=getCfg();
-  sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  m1=cfg.m1||false; m1Date=cfg.m1Date||null;
   freelancerSlug=cfg.slug;
 
   document.getElementById('shell').style.display='block';
   document.getElementById('hdr-name').textContent=(cfg.name||'').toUpperCase()+' · ACEDEN GROUP';
-  document.getElementById('m1-toggle').checked=m1;
 
   // Always re-fetch a fresh token using the stored slug.
   // This fixes stale/invalid token errors without the freelancer needing to reset.
@@ -419,7 +311,6 @@ async function launchApp(){
   }
 
   loadRefStats();
-  loadEntries();
 }
 
 // ── BOOT ─────────────────────────────────────────────────────────────────────
@@ -431,98 +322,6 @@ async function launchApp(){
     document.getElementById('login-screen').style.display='flex';
   }
 })();
-
-// ── DATA ─────────────────────────────────────────────────────────────────────
-async function loadEntries(){
-  document.getElementById('log-body').innerHTML='<tr><td colspan="7" class="empty-td">Loading...</td></tr>';
-  const{data,error}=await sb.from('time_entries').select('*').order('date',{ascending:false}).order('created_at',{ascending:false});
-  if(error){console.error(error);return}
-  entries=data||[];renderAll();
-}
-async function deleteEntry(id){
-  if(!confirm('Delete this entry?'))return;
-  await sb.from('time_entries').delete().eq('id',id);loadEntries();
-}
-
-// ── MILESTONE ────────────────────────────────────────────────────────────────
-function persistM1(){
-  const cfg=getCfg();cfg.m1=m1;cfg.m1Date=m1Date;setCfg(cfg);
-  if(m1&&m1Date){sb.from('time_entries').update({rate:15}).gte('date',m1Date).then(()=>loadEntries());}
-  else{sb.from('time_entries').update({rate:10}).then(()=>loadEntries());}
-}
-function toggleM1(){
-  m1=document.getElementById('m1-toggle').checked;
-  if(m1&&!m1Date)m1Date=today();if(!m1)m1Date=null;
-  persistM1();renderAll();
-}
-
-// ── RENDER ────────────────────────────────────────────────────────────────────
-function weekHrs(){const ws=weekStart();return entries.filter(e=>e.date>=ws).reduce((s,e)=>s+parseFloat(e.hours),0)}
-function totalHrs(){return entries.reduce((s,e)=>s+parseFloat(e.hours),0)}
-function renderAll(){renderStats();renderBars();renderTable()}
-
-function renderStats(){
-  const wh=weekHrs(),th=totalHrs();
-  document.getElementById('s-week').textContent=wh.toFixed(1);
-  document.getElementById('s-total').textContent=th.toFixed(1);
-  document.getElementById('s-days').textContent=new Set(entries.map(e=>e.date)).size;
-  const el=document.getElementById('cap-remain');if(el)el.textContent=Math.max(0,15-wh).toFixed(1);
-  document.getElementById('m1-banner').style.display=m1?'flex':'none';
-  if(m1&&m1Date)document.getElementById('m1-since').textContent='From: '+m1Date;
-}
-function renderBars(){
-  const wh=weekHrs(),th=totalHrs();
-  const capP=Math.min(100,Math.round(wh/15*100)),prjP=Math.min(100,Math.round(th/120*100));
-  const capCls='fill'+(capP>=100?' danger':capP>=80?' warn':'');
-  const setEl=(id,fn)=>{const el=document.getElementById(id);if(el)fn(el)};
-  setEl('cap-lbl',el=>el.textContent=wh.toFixed(1)+' / 15 hrs');
-  setEl('cap-lbl2',el=>el.textContent=wh.toFixed(1)+' / 15 hrs');
-  setEl('cap-bar',el=>{el.style.width=capP+'%';el.className=capCls});
-  setEl('cap-bar2',el=>{el.style.width=capP+'%';el.className=capCls});
-  setEl('proj-lbl',el=>el.textContent=th.toFixed(1)+' / 120 hrs');
-  setEl('proj-bar',el=>el.style.width=prjP+'%');
-  const cat={};entries.forEach(e=>{cat[e.category]=(cat[e.category]||0)+parseFloat(e.hours)});
-  const mx=Math.max(...Object.values(cat),1);
-  document.getElementById('cat-bars').innerHTML=!Object.keys(cat).length
-    ?'<div style="color:var(--muted);font-size:.8rem;padding:.5rem 0">No entries yet</div>'
-    :Object.entries(cat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
-      <div class="cat-row">
-        <div class="cat-name">${CAT_LBL[k]||k}</div>
-        <div class="cat-track"><div class="cat-fill" style="width:${Math.round(v/mx*100)}%;background:${CAT_COL[k]||'#888'}"></div></div>
-        <div class="cat-hrs">${v.toFixed(1)}h</div>
-      </div>`).join('');
-}
-function renderTable(){
-  const fd=document.getElementById('f-date').value,fc=document.getElementById('f-cat').value;
-  let rows=entries;
-  if(fd)rows=rows.filter(e=>e.date===fd);if(fc)rows=rows.filter(e=>e.category===fc);
-  const tbody=document.getElementById('log-body');
-  if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="6" class="empty-td">'+(fd||fc?'No entries match':'No entries yet')+'</td></tr>';
-    document.getElementById('tbl-ft').style.display='none';return;
-  }
-  tbody.innerHTML=rows.map(e=>{
-    return`<tr>
-      <td class="mono muted-t">${e.date}</td>
-      <td><span class="badge ${CAT_BDG[e.category]||'b-admin'}">${CAT_LBL[e.category]||e.category}</span></td>
-      <td>${esc(e.description||'')}</td>
-      <td class="mono">${parseFloat(e.hours).toFixed(2)}</td>
-      <td class="muted-t">${e.notes?esc(e.notes):'—'}</td>
-      <td><button class="del-btn" onclick="deleteEntry(${e.id})" title="Delete">✕</button></td>
-    </tr>`;
-  }).join('');
-  const fh=rows.reduce((s,e)=>s+parseFloat(e.hours),0);
-  document.getElementById('row-ct').textContent=rows.length;
-  document.getElementById('ft-hrs').textContent=fh.toFixed(1);
-  document.getElementById('tbl-ft').style.display='block';
-}
-function exportCSV(){
-  if(!entries.length){alert('No entries to export');return}
-  const hdr=['Date','Category','Description','Hours','Notes'];
-  const rows=entries.map(e=>[e.date,CAT_LBL[e.category]||e.category,'"'+(e.description||'').replace(/"/g,'""')+'"',parseFloat(e.hours).toFixed(2),'"'+(e.notes||'').replace(/"/g,'""')+'"']);
-  const csv=[hdr,...rows].map(r=>r.join(',')).join('\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='timelog_'+today()+'.csv';a.click();
-}
 
 // ── REFERRAL STATS ────────────────────────────────────────────────────────────
 async function loadRefStats(){
