@@ -128,7 +128,7 @@ tr:hover td{background:var(--surface2)}
 }
 @media(max-width:480px){
   .stats{grid-template-columns:1fr 1fr}.ref-grid{grid-template-columns:1fr 1fr}
-  .milestone{flex-direction:column;gap:.5rem}.timer-top{flex-direction:column;gap:.75rem}
+  .milestone{flex-direction:column;gap:.5rem}
 }
 </style>
 </head>
@@ -225,7 +225,6 @@ tr:hover td{background:var(--surface2)}
   <div class="stats">
     <div class="stat"><div class="stat-label">Hours this week</div><div class="stat-val" id="s-week">—</div><div class="stat-note">Cap: 15 hrs/week</div></div>
     <div class="stat"><div class="stat-label">Total hours</div><div class="stat-val" id="s-total">—</div><div class="stat-note">Max 120 hrs</div></div>
-    <div class="stat"><div class="stat-label">Accrued earnings</div><div class="stat-val c-green" id="s-earn">—</div><div class="stat-note" id="s-earn-note">Pre-M1 @ $10/hr</div></div>
     <div class="stat"><div class="stat-label">Days logged</div><div class="stat-val" id="s-days">—</div><div class="stat-note">Unique work days</div></div>
   </div>
 
@@ -271,11 +270,11 @@ tr:hover td{background:var(--surface2)}
     </div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Hours</th><th>Rate</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="log-body"><tr><td colspan="7" class="empty-td">Loading...</td></tr></tbody>
+        <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Hours</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="log-body"><tr><td colspan="6" class="empty-td">Loading...</td></tr></tbody>
       </table>
     </div>
-    <div class="tbl-footer" id="tbl-ft">Showing <span id="row-ct">0</span> entries — <span id="ft-hrs">0.0</span> hrs — <span id="ft-earn">$0</span></div>
+    <div class="tbl-footer" id="tbl-ft">Showing <span id="row-ct">0</span> entries — <span id="ft-hrs">0.0</span> hrs</div>
   </div>
 
 </div>
@@ -291,7 +290,6 @@ const CAT_COL={community:'#3d7fff',outreach:'#22c98b',content:'#f5a623',admin:'#
 const CAT_BDG={community:'b-community',outreach:'b-outreach',content:'b-content',admin:'b-admin',research:'b-research'};
 
 let sb=null,entries=[],m1=false,m1Date=null,freelancerSlug=null,apiToken=null;
-let activityTimer=null;
 
 // ── STORAGE ──────────────────────────────────────────────────────────────────
 function getCfg(){try{return JSON.parse(localStorage.getItem('fl_cfg_v1')||'null')}catch(e){return null}}
@@ -301,7 +299,6 @@ function setCfg(c){localStorage.setItem('fl_cfg_v1',JSON.stringify(c))}
 function today(){return new Date().toISOString().split('T')[0]}
 function weekStart(){const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().split('T')[0]}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;return[h,m,sc].map(n=>String(n).padStart(2,'0')).join(':')}
 function showToast(msg,isErr){
   const t=document.getElementById('toast');
   t.textContent=msg;t.style.background=isErr?'var(--red-dim)':'var(--green-dim)';
@@ -379,7 +376,7 @@ function doLogin(){
   }
 }
 function doLogout(){
-  entries=[];clearInterval(activityTimer);
+  entries=[];
   document.getElementById('shell').style.display='none';
   document.getElementById('login-pw').value='';
   document.getElementById('login-err').style.display='none';
@@ -393,17 +390,34 @@ function resetSetup(){
 }
 
 // ── APP LAUNCH ───────────────────────────────────────────────────────────────
-function launchApp(){
+async function launchApp(){
   const cfg=getCfg();
   sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   m1=cfg.m1||false; m1Date=cfg.m1Date||null;
-  freelancerSlug=cfg.slug; apiToken=cfg.token;
+  freelancerSlug=cfg.slug;
 
   document.getElementById('shell').style.display='block';
   document.getElementById('hdr-name').textContent=(cfg.name||'').toUpperCase()+' · ACEDEN GROUP';
   document.getElementById('m1-toggle').checked=m1;
 
-  // Load referral stats
+  // Always re-fetch a fresh token using the stored slug.
+  // This fixes stale/invalid token errors without the freelancer needing to reset.
+  try {
+    const res=await fetch(API_BASE+'/referral/resolve-slug/'+encodeURIComponent(cfg.slug));
+    const d=await res.json();
+    if(d.valid && d.referral_code){
+      apiToken=d.referral_code;
+      cfg.token=d.referral_code;
+      if(d.name) cfg.name=d.name;
+      setCfg(cfg);
+      document.getElementById('hdr-name').textContent=(d.name||cfg.name||'').toUpperCase()+' · ACEDEN GROUP';
+    } else {
+      apiToken=cfg.token; // fallback to stored token
+    }
+  } catch(e) {
+    apiToken=cfg.token; // network error — use stored token
+  }
+
   loadRefStats();
   loadEntries();
 }
@@ -445,16 +459,12 @@ function toggleM1(){
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function weekHrs(){const ws=weekStart();return entries.filter(e=>e.date>=ws).reduce((s,e)=>s+parseFloat(e.hours),0)}
 function totalHrs(){return entries.reduce((s,e)=>s+parseFloat(e.hours),0)}
-function calcEarn(){return entries.reduce((s,e)=>s+parseFloat(e.hours)*parseFloat(e.rate||10),0)}
-function entryRate(e){return parseFloat(e.rate||10)}
 function renderAll(){renderStats();renderBars();renderTable()}
 
 function renderStats(){
-  const wh=weekHrs(),th=totalHrs(),earn=calcEarn();
+  const wh=weekHrs(),th=totalHrs();
   document.getElementById('s-week').textContent=wh.toFixed(1);
   document.getElementById('s-total').textContent=th.toFixed(1);
-  document.getElementById('s-earn').textContent='$'+Math.round(earn).toLocaleString();
-  document.getElementById('s-earn-note').textContent=m1?'Post-M1 blended rate':'Pre-M1 @ $10/hr';
   document.getElementById('s-days').textContent=new Set(entries.map(e=>e.date)).size;
   const el=document.getElementById('cap-remain');if(el)el.textContent=Math.max(0,15-wh).toFixed(1);
   document.getElementById('m1-banner').style.display=m1?'flex':'none';
@@ -488,47 +498,91 @@ function renderTable(){
   if(fd)rows=rows.filter(e=>e.date===fd);if(fc)rows=rows.filter(e=>e.category===fc);
   const tbody=document.getElementById('log-body');
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="7" class="empty-td">'+(fd||fc?'No entries match':'No entries yet — start the timer to log hours')+'</td></tr>';
+    tbody.innerHTML='<tr><td colspan="6" class="empty-td">'+(fd||fc?'No entries match':'No entries yet')+'</td></tr>';
     document.getElementById('tbl-ft').style.display='none';return;
   }
   tbody.innerHTML=rows.map(e=>{
-    const r=entryRate(e);
     return`<tr>
       <td class="mono muted-t">${e.date}</td>
       <td><span class="badge ${CAT_BDG[e.category]||'b-admin'}">${CAT_LBL[e.category]||e.category}</span></td>
       <td>${esc(e.description||'')}</td>
       <td class="mono">${parseFloat(e.hours).toFixed(2)}</td>
-      <td class="mono" style="color:${r===15?'var(--green)':'var(--muted)'}">$${r}/hr</td>
       <td class="muted-t">${e.notes?esc(e.notes):'—'}</td>
       <td><button class="del-btn" onclick="deleteEntry(${e.id})" title="Delete">✕</button></td>
     </tr>`;
   }).join('');
-  const fh=rows.reduce((s,e)=>s+parseFloat(e.hours),0),fe=rows.reduce((s,e)=>s+parseFloat(e.hours)*entryRate(e),0);
+  const fh=rows.reduce((s,e)=>s+parseFloat(e.hours),0);
   document.getElementById('row-ct').textContent=rows.length;
   document.getElementById('ft-hrs').textContent=fh.toFixed(1);
-  document.getElementById('ft-earn').textContent='$'+Math.round(fe).toLocaleString();
   document.getElementById('tbl-ft').style.display='block';
 }
 function exportCSV(){
   if(!entries.length){alert('No entries to export');return}
-  const hdr=['Date','Category','Description','Hours','Rate','Earnings','Notes'];
-  const rows=entries.map(e=>{const r=entryRate(e);return[e.date,CAT_LBL[e.category]||e.category,'"'+(e.description||'').replace(/"/g,'""')+'"',parseFloat(e.hours).toFixed(2),r,(parseFloat(e.hours)*r).toFixed(2),'"'+(e.notes||'').replace(/"/g,'""')+'"']});
+  const hdr=['Date','Category','Description','Hours','Notes'];
+  const rows=entries.map(e=>[e.date,CAT_LBL[e.category]||e.category,'"'+(e.description||'').replace(/"/g,'""')+'"',parseFloat(e.hours).toFixed(2),'"'+(e.notes||'').replace(/"/g,'""')+'"']);
   const csv=[hdr,...rows].map(r=>r.join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='timelog_'+today()+'.csv';a.click();
 }
 
 // ── REFERRAL STATS ────────────────────────────────────────────────────────────
 async function loadRefStats(){
-  if(!apiToken)return;
   const errEl=document.getElementById('ref-err');
   const setVal=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
   setVal('ref-total','…');setVal('ref-trial','…');setVal('ref-paid','…');setVal('ref-cancelled','…');
   errEl.textContent='';
+
+  // If apiToken is missing (e.g. launchApp fetch failed), re-resolve from stored slug before giving up.
+  // This means existing freelancers never need to do anything — their stored invite slug heals the session.
+  if(!apiToken){
+    const cfg=getCfg();
+    if(!cfg||!cfg.slug){
+      setVal('ref-total','—');setVal('ref-trial','—');setVal('ref-paid','—');setVal('ref-cancelled','—');
+      errEl.textContent='Session not ready — please sign out and sign back in.';
+      return;
+    }
+    try{
+      const res=await fetch(API_BASE+'/referral/resolve-slug/'+encodeURIComponent(cfg.slug));
+      const d=await res.json();
+      if(d.valid && d.referral_code){
+        apiToken=d.referral_code;
+        cfg.token=d.referral_code;
+        if(d.name){cfg.name=d.name;document.getElementById('hdr-name').textContent=d.name.toUpperCase()+' · ACEDEN GROUP';}
+        setCfg(cfg);
+      } else {
+        setVal('ref-total','—');setVal('ref-trial','—');setVal('ref-paid','—');setVal('ref-cancelled','—');
+        errEl.textContent='Your invite link could not be verified. Contact your admin.';
+        return;
+      }
+    }catch(e){
+      setVal('ref-total','—');setVal('ref-trial','—');setVal('ref-paid','—');setVal('ref-cancelled','—');
+      errEl.textContent='Could not reach server — check your connection and try Refresh.';
+      return;
+    }
+  }
+
   try{
     const r=await fetch(API_BASE+'/referral/my-stats',{
       headers:{Authorization:'Bearer '+apiToken,'Content-Type':'application/json'}
     });
-    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.detail||'Status '+r.status)}
+    if(!r.ok){
+      // If the token is rejected (401/403), try re-resolving the slug once and retry.
+      if((r.status===401||r.status===403)&&getCfg()?.slug){
+        const cfg=getCfg();
+        const res2=await fetch(API_BASE+'/referral/resolve-slug/'+encodeURIComponent(cfg.slug));
+        const d2=await res2.json();
+        if(d2.valid&&d2.referral_code){
+          apiToken=d2.referral_code;cfg.token=d2.referral_code;setCfg(cfg);
+          const r2=await fetch(API_BASE+'/referral/my-stats',{headers:{Authorization:'Bearer '+apiToken,'Content-Type':'application/json'}});
+          if(!r2.ok){const e2=await r2.json().catch(()=>({}));throw new Error(e2.detail||'Status '+r2.status)}
+          const d3=await r2.json();
+          setVal('ref-total',d3.total??'—');setVal('ref-trial',d3.trialing??'—');setVal('ref-paid',d3.paid??'—');setVal('ref-cancelled',d3.cancelled??'—');
+          const linkEl=document.getElementById('ref-link-box');
+          if(linkEl)linkEl.textContent=d3.invite_link||d3.referral_link||'—';
+          return;
+        }
+      }
+      const ed=await r.json().catch(()=>({}));throw new Error(ed.detail||'Status '+r.status);
+    }
     const d=await r.json();
     setVal('ref-total',  d.total      ??'—');
     setVal('ref-trial',  d.trialing   ??'—');
